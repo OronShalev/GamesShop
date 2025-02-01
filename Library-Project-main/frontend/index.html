@@ -1,48 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Game Management System</title>
     <link rel="stylesheet" href="static/css/styles.css" />
-  </head>
-  <body>
+</head>
+<body>
     <div class="container">
-      <div id="auth-section">
-        <h2>Authentication</h2>
-        <div id="login-form">
-          <input type="text" id="username" placeholder="Username" />
-          <input type="password" id="password" placeholder="Password" />
-          <button onclick="login()">Login</button>
-          <button onclick="register()">Register</button>
+        <div id="auth-section">
+            <h2>Authentication</h2>
+            <div id="login-form">
+                <input type="text" id="username" placeholder="Username" />
+                <input type="password" id="password" placeholder="Password" />
+                <button onclick="login()">Login</button>
+            </div>
         </div>
-      </div>
-
-      <div id="main-section" class="hidden">
-        <div class="header">
-          <h1>Game Management System</h1>
-          <button onclick="logout()">Logout</button>
+        <div id="main-section" style="display: none;">
+            <div class="header">
+                <h1>Game Management System</h1>
+                <button onclick="logout()">Logout</button>
+            </div>
+            <div class="games-section">
+                <h2>Add New Game</h2>
+                <div class="form-group">
+                    <input type="text" id="game-name" placeholder="Name" />
+                    <input type="number" id="game-price" placeholder="Price" />
+                    <input type="number" id="game-quantity" placeholder="Quantity" />
+                    <button onclick="addGame()">Add Game</button>
+                </div>
+                <h2>All Games</h2>
+                <div id="games-list" class="games-grid"></div>
+                <h2>Loaned Games</h2>
+                <div id="loaned-games-list" class="games-grid"></div>
+            </div>
         </div>
-
-        <div class="games-section">
-          <h2>Add New Game</h2>
-          <div class="form-group">
-            <input type="text" id="game-title" placeholder="Title" />
-            <input type="text" id="game-genre" placeholder="Genre" />
-            <input type="number" id="game-price" placeholder="Price" />
-            <input type="number" id="game-quantity" placeholder="Quantity" />
-            <button onclick="addGame()">Add Game</button>
-          </div>
-
-          <h2>All Games</h2>
-          <div id="games-list" class="games-grid"></div>
-
-          <h2>Loaned Games</h2>
-          <div id="loaned-games-list" class="games-grid"></div>
-        </div>
-      </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="script.js"></script>
-  </body>
+</body>
 </html>
