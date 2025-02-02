@@ -50,6 +50,46 @@ function hideMainSection() {
     document.getElementById('password').value = '';
 }
 
+// Function to add a new client
+async function addClient() {
+    const name = prompt("Enter client name:");
+    const phone_number = prompt("Enter client phone number:");
+
+    if (!name || !phone_number) {
+        alert("Name and phone number are required.");
+        return;
+    }
+
+    try {
+        const response = await axios.post('http://127.0.0.1:5000/clients', {
+            name: name,
+            phone_number: phone_number
+        });
+
+        alert(response.data.message);
+        getClients(); // Refresh client list
+    } catch (error) {
+        console.error("Error adding client:", error);
+        alert(error.response?.data?.error || "Failed to add client");
+    }
+}
+
+// Function to delete a client
+async function deleteClient(clientId) {
+    if (!confirm("Are you sure you want to delete this client?")) {
+        return;
+    }
+
+    try {
+        const response = await axios.delete(`http://127.0.0.1:5000/clients/${clientId}`);
+        alert(response.data.message);
+        getClients(); // Refresh client list
+    } catch (error) {
+        console.error("Error deleting client:", error);
+        alert("Failed to delete client");
+    }
+}
+
 // Function to get all games from the API
 async function getGames() {
     try {
