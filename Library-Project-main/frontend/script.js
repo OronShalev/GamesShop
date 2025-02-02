@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (token) {
         showMainSection();
         getGames();
+        getCustomers(); // Load customers when the page loads
     }
 });
 
@@ -50,43 +51,73 @@ function hideMainSection() {
     document.getElementById('password').value = '';
 }
 
-// Function to add a new client
-async function addClient() {
-    const name = prompt("Enter client name:");
-    const phone_number = prompt("Enter client phone number:");
+async function addCustomer() {
+    const name = document.getElementById('customer-name').value.trim();
+    const phone_number = document.getElementById('customer-phone').value.trim();
+    const email = document.getElementById('customer-email').value.trim();
 
-    if (!name || !phone_number) {
-        alert("Name and phone number are required.");
+    if (!name || !phone_number || !email) {
+        alert('Please fill in all fields before adding a customer.');
         return;
     }
 
     try {
-        const response = await axios.post('http://127.0.0.1:5000/clients', {
+        const response = await axios.post('http://127.0.0.1:5000/customers', {
             name: name,
-            phone_number: phone_number
+            phone_number: phone_number,
+            email: email
         });
 
         alert(response.data.message);
-        getClients(); // Refresh client list
+        getCustomers(); // Refresh customer list
+
+        // Clear input fields
+        document.getElementById('customer-name').value = '';
+        document.getElementById('customer-phone').value = '';
+        document.getElementById('customer-email').value = '';
     } catch (error) {
-        console.error("Error adding client:", error);
-        alert(error.response?.data?.error || "Failed to add client");
+        console.error('Error adding customer:', error);
+        alert(error.response?.data?.error || 'Failed to add customer');
     }
 }
 
-// Function to delete a client
-async function deleteClient(clientId) {
-    if (!confirm("Are you sure you want to delete this client?")) {
+// Function to fetch and display all customers
+async function getCustomers() {
+    try {
+        const response = await axios.get('http://127.0.0.1:5000/customers');
+
+        const customersList = document.getElementById('customers-list');
+        customersList.innerHTML = '';
+
+        response.data.customers.forEach(customer => {
+            customersList.innerHTML += `
+                <div class="customer-card">
+                    <h3>${customer.name}</h3>
+                    <p>Phone: ${customer.phone}</p>
+                    <p>Email: ${customer.email}</p>
+                    <button onclick="deleteCustomer(${customer.id})">Delete</button>
+                </div>
+            `;
+        });
+    } catch (error) {
+        console.error('Error fetching customers:', error);
+        alert('Failed to load customers');
+    }
+}
+
+// Function to delete a customer
+async function deleteCustomer(customerId) {
+    if (!confirm('Are you sure you want to delete this customer?')) {
         return;
     }
 
     try {
-        const response = await axios.delete(`http://127.0.0.1:5000/clients/${clientId}`);
-        alert(response.data.message);
-        getClients(); // Refresh client list
+        await axios.delete(`http://127.0.0.1:5000/customers/${customerId}`);
+        alert('Customer deleted successfully!');
+        getCustomers(); // Refresh the customer list
     } catch (error) {
-        console.error("Error deleting client:", error);
-        alert("Failed to delete client");
+        console.error('Error deleting customer:', error);
+        alert('Failed to delete customer');
     }
 }
 

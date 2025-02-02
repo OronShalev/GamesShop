@@ -34,6 +34,18 @@
                 <h2>Loaned Games</h2>
                 <div id="loaned-games-list" class="games-grid"></div>
             </div>
+            <div class="customers-section">
+                <h2>Manage Customers</h2>
+                <div class="form-group">
+                    <input type="text" id="customer-name" placeholder="Customer Name" />
+                    <input type="tel" id="customer-phone" placeholder="Phone Number" pattern="[0-9]{10}" />
+                    <input type="email" id="customer-email" placeholder="Email" />
+                    <button onclick="addCustomer()">Add Customer</button>
+                </div>
+                <h2>All Customers</h2>
+                <div id="customers-list" class="customers-grid"></div>
+            </div>
+
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
