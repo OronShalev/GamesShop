@@ -126,33 +126,56 @@ async function getGames() {
     try {
         const token = localStorage.getItem('token');
         const response = await axios.get('http://127.0.0.1:5000/games', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
+            headers: { 'Authorization': `Bearer ${token}` }
         });
 
         const gamesList = document.getElementById('games-list');
         gamesList.innerHTML = ''; // Clear existing list
 
         response.data.games.forEach(game => {
+            let loanButton = game.is_loaned
+                ? `<button disabled>Loaned</button>`
+                : `<button onclick="loanGame(${game.id})">Loan</button>`;
+
             gamesList.innerHTML += `
                 <div class="game-card">
                     <h3>${game.name}</h3>
                     <p>Price: $${game.price}</p>
                     <p>Quantity: ${game.quantity}</p>
+                    ${loanButton}
                     <button onclick="deleteGame(${game.id})">Delete</button>
                 </div>
             `;
         });
     } catch (error) {
         console.error('Error fetching games:', error);
-        if (error.response && error.response.status === 401) {
-            hideMainSection(); // If unauthorized, show login
-        } else {
-            alert('Failed to load games');
-        }
+        alert('Failed to load games');
     }
 }
+
+// Function to loan a game
+async function loanGame(gameId) {
+    const customerId = prompt("Enter customer ID:");
+
+    if (!customerId) {
+        alert("Customer ID is required.");
+        return;
+    }
+
+    try {
+        const response = await axios.post('http://127.0.0.1:5000/loan', {
+            customer_id: customerId,
+            game_id: gameId
+        });
+
+        alert(response.data.message);
+        getGames(); // Refresh games list
+    } catch (error) {
+        console.error('Error loaning game:', error);
+        alert(error.response?.data?.error || 'Failed to loan game');
+    }
+}
+
 
 // Function to add a new game to the database
 async function addGame() {

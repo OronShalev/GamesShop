@@ -38,34 +38,49 @@ def add_game():
 
 
 # Route to retrieve all games
+@app.route('/loan', methods=['POST'])
+def loan_game():
+    try:
+        data = request.json
+        customer_id = data.get('customer_id')
+        game_id = data.get('game_id')
+
+        # Check if game is already loaned and not returned
+        existing_loan = Loan.query.filter_by(game_id=game_id, return_date=None).first()
+        if existing_loan:
+            return jsonify({'error': 'This game is already loaned'}), 400
+
+        # Create new loan
+        new_loan = Loan(client_id=customer_id, game_id=game_id)
+        db.session.add(new_loan)
+        db.session.commit()
+
+        return jsonify({'message': 'Game successfully loaned'}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to loan game', 'message': str(e)}), 500
+
 @app.route('/games', methods=['GET'])
 def get_games():
     try:
-        games = Game.query.all()  # Retrieve all games from the database
+        games = Game.query.all()
 
-        # Create an empty list to store formatted game data
         games_list = []
-
-        for game in games:  # Loop through each game
-            game_data = {
+        for game in games:
+            is_loaned = Loan.query.filter_by(game_id=game.id, return_date=None).first() is not None
+            games_list.append({
                 'id': game.id,
                 'name': game.name,
                 'price': game.price,
-                'quantity': game.quantity
-            }
-            # Add the game dictionary to the list
-            games_list.append(game_data)
+                'quantity': game.quantity,
+                'is_loaned': is_loaned
+            })
 
-        return jsonify({
-            'message': 'Games retrieved successfully',
-            'games': games_list
-        }), 200
+        return jsonify({'message': 'Games retrieved successfully', 'games': games_list}), 200
 
     except Exception as e:
-        return jsonify({
-            'error': 'Failed to retrieve games',
-            'message': str(e)
-        }), 500
+        return jsonify({'error': 'Failed to retrieve games', 'message': str(e)}), 500
 
 @app.route('/games/<int:game_id>', methods=['DELETE'])
 def delete_game(game_id):
