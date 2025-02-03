@@ -155,17 +155,44 @@ async function getGames() {
 
 // Function to loan a game
 async function loanGame(gameId) {
-    const customerId = prompt("Enter customer ID:");
+    // Fetch customers ordered by name
+    const customers = await fetchCustomers();
+    if (!customers.length) {
+        alert("No customers available.");
+        return;
+    }
 
-    if (!customerId) {
-        alert("Customer ID is required.");
+    // Open a prompt (or create a dropdown UI) to select a customer
+    const customerName = prompt("Enter customer name to search:");
+    const matchedCustomers = customers.filter(c => c.name.toLowerCase().includes(customerName.toLowerCase()));
+
+    if (!matchedCustomers.length) {
+        alert("No matching customers found.");
+        return;
+    }
+
+    let customerSelection = matchedCustomers.map((c, i) => `${i + 1}. ${c.name}`).join("\n");
+    let selectedIndex = prompt(`Select a customer by number:\n${customerSelection}`);
+
+    if (!selectedIndex || isNaN(selectedIndex) || selectedIndex < 1 || selectedIndex > matchedCustomers.length) {
+        alert("Invalid selection.");
+        return;
+    }
+
+    let selectedCustomer = matchedCustomers[selectedIndex - 1];
+
+    // Open date picker for return date
+    let returnDate = prompt("Enter return date (YYYY-MM-DD):");
+    if (!returnDate || !/^\d{4}-\d{2}-\d{2}$/.test(returnDate)) {
+        alert("Invalid date format.");
         return;
     }
 
     try {
         const response = await axios.post('http://127.0.0.1:5000/loan', {
-            customer_id: customerId,
-            game_id: gameId
+            customer_id: selectedCustomer.id,
+            game_id: gameId,
+            return_date: returnDate
         });
 
         alert(response.data.message);
@@ -175,6 +202,18 @@ async function loanGame(gameId) {
         alert(error.response?.data?.error || 'Failed to loan game');
     }
 }
+
+// Fetch customers from backend
+async function fetchCustomers() {
+    try {
+        const response = await axios.get('http://127.0.0.1:5000/customers/search');
+        return response.data.customers;
+    } catch (error) {
+        console.error('Error fetching customers:', error);
+        return [];
+    }
+}
+
 
 
 // Function to add a new game to the database

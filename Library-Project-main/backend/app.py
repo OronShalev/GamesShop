@@ -36,14 +36,24 @@ def add_game():
         db.session.rollback()
         return jsonify({'error': 'Failed to add game', 'message': str(e)}), 500
 
+@app.route('/customers/search', methods=['GET'])
+def search_customers():
+    query = request.args.get('q', '')  # Get search term
+    customers = Customer.query.filter(Customer.name.ilike(f"%{query}%")).order_by(Customer.name).all()
+    customers_list = [{"id": c.id, "name": c.name} for c in customers]
+    return jsonify({"customers": customers_list})
 
-# Route to retrieve all games
+
 @app.route('/loan', methods=['POST'])
 def loan_game():
     try:
         data = request.json
         customer_id = data.get('customer_id')
         game_id = data.get('game_id')
+        return_date_str = data.get('return_date')
+
+        # Convert return date to datetime
+        return_date = datetime.strptime(return_date_str, "%Y-%m-%d") if return_date_str else None
 
         # Check if game is already loaned and not returned
         existing_loan = Loan.query.filter_by(game_id=game_id, return_date=None).first()
@@ -51,7 +61,7 @@ def loan_game():
             return jsonify({'error': 'This game is already loaned'}), 400
 
         # Create new loan
-        new_loan = Loan(client_id=customer_id, game_id=game_id)
+        new_loan = Loan(client_id=customer_id, game_id=game_id, return_date=return_date)
         db.session.add(new_loan)
         db.session.commit()
 
@@ -60,6 +70,7 @@ def loan_game():
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': 'Failed to loan game', 'message': str(e)}), 500
+
 
 @app.route('/games', methods=['GET'])
 def get_games():
