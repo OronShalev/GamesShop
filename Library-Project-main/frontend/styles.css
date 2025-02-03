@@ -1,3 +1,19 @@
 .hidden {
     display: none;
 }
+
+.close {
+    float: right;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.loan-form {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f8f9fa;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+

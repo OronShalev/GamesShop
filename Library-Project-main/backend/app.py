@@ -79,7 +79,7 @@ def get_games():
 
         games_list = []
         for game in games:
-            is_loaned = Loan.query.filter_by(game_id=game.id, return_date=None).first() is not None
+            is_loaned = Loan.query.filter_by(game_id=game.id).first() is not None
             games_list.append({
                 'id': game.id,
                 'name': game.name,

@@ -133,17 +133,17 @@ async function getGames() {
         gamesList.innerHTML = ''; // Clear existing list
 
         response.data.games.forEach(game => {
-            let loanButton = game.is_loaned
-                ? `<button disabled>Loaned</button>`
-                : `<button onclick="loanGame(${game.id})">Loan</button>`;
+            let loanButtonText = game.is_loaned ? "Loaned" : "Loan";
+            let loanButtonDisabled = game.is_loaned ? "disabled" : "";
 
             gamesList.innerHTML += `
-                <div class="game-card">
+                <div class="game-card" id="game-${game.id}">
                     <h3>${game.name}</h3>
                     <p>Price: $${game.price}</p>
                     <p>Quantity: ${game.quantity}</p>
-                    ${loanButton}
+                    <button id="loan-btn-${game.id}" ${loanButtonDisabled} onclick="toggleLoanForm(${game.id})">${loanButtonText}</button>
                     <button onclick="deleteGame(${game.id})">Delete</button>
+                    <div id="loan-form-${game.id}" class="loan-form hidden"></div>
                 </div>
             `;
         });
@@ -153,44 +153,84 @@ async function getGames() {
     }
 }
 
-// Function to loan a game
-async function loanGame(gameId) {
-    // Fetch customers ordered by name
+
+async function toggleLoanForm(gameId) {
+    const loanFormContainer = document.getElementById(`loan-form-${gameId}`);
+    const loanButton = document.getElementById(`loan-btn-${gameId}`);
+
+    // Toggle logic: if form is visible, hide it; otherwise, show it
+    if (!loanFormContainer.classList.contains("hidden")) {
+        loanFormContainer.innerHTML = ""; // Clear form
+        loanFormContainer.classList.add("hidden");
+        loanButton.textContent = "Loan"; // Switch back to "Loan"
+        return;
+    }
+
     const customers = await fetchCustomers();
-    if (!customers.length) {
-        alert("No customers available.");
-        return;
+
+    let customerOptions = customers.map(
+        customer => `<option value="${customer.id}">${customer.name} (${customer.phone})</option>`
+    ).join("");
+
+    loanFormContainer.innerHTML = `
+        <label for="customer-${gameId}">Select Customer:</label>
+        <select id="customer-${gameId}">
+            <option value="">-- Choose Customer --</option>
+            ${customerOptions}
+        </select>
+        <label for="return-date-${gameId}">Return Date:</label>
+        <input type="date" id="return-date-${gameId}" />
+        <button onclick="confirmLoan(${gameId})">Confirm Loan</button>
+    `;
+    loanFormContainer.classList.remove("hidden");
+    loanButton.textContent = "Cancel"; // Switch to "Cancel"
+}
+
+
+
+function closeLoanModal() {
+    document.getElementById("loan-modal").style.display = "none";
+}
+
+async function loadCustomers() {
+    try {
+        const response = await axios.get("http://127.0.0.1:5000/customers");
+        const customerList = document.getElementById("customer-list");
+        customerList.innerHTML = "";
+
+        response.data.customers.forEach(customer => {
+            const div = document.createElement("div");
+            div.classList.add("customer-item");
+            div.textContent = `${customer.name} (${customer.phone})`;
+            div.onclick = () => selectCustomer(customer.id);
+            customerList.appendChild(div);
+        });
+    } catch (error) {
+        console.error("Error fetching customers:", error);
+        alert("Failed to load customers");
     }
+}
 
-    // Open a prompt (or create a dropdown UI) to select a customer
-    const customerName = prompt("Enter customer name to search:");
-    const matchedCustomers = customers.filter(c => c.name.toLowerCase().includes(customerName.toLowerCase()));
+let selectedCustomerId = null;
 
-    if (!matchedCustomers.length) {
-        alert("No matching customers found.");
-        return;
-    }
+function selectCustomer(customerId) {
+    selectedCustomerId = customerId;
+    document.querySelectorAll(".customer-item").forEach(item => item.classList.remove("selected"));
+    event.target.classList.add("selected");
+}
 
-    let customerSelection = matchedCustomers.map((c, i) => `${i + 1}. ${c.name}`).join("\n");
-    let selectedIndex = prompt(`Select a customer by number:\n${customerSelection}`);
+async function confirmLoan(gameId) {
+    const customerId = document.getElementById(`customer-${gameId}`).value;
+    const returnDate = document.getElementById(`return-date-${gameId}`).value;
 
-    if (!selectedIndex || isNaN(selectedIndex) || selectedIndex < 1 || selectedIndex > matchedCustomers.length) {
-        alert("Invalid selection.");
-        return;
-    }
-
-    let selectedCustomer = matchedCustomers[selectedIndex - 1];
-
-    // Open date picker for return date
-    let returnDate = prompt("Enter return date (YYYY-MM-DD):");
-    if (!returnDate || !/^\d{4}-\d{2}-\d{2}$/.test(returnDate)) {
-        alert("Invalid date format.");
+    if (!customerId || !returnDate) {
+        alert("Please select a customer and return date.");
         return;
     }
 
     try {
-        const response = await axios.post('http://127.0.0.1:5000/loan', {
-            customer_id: selectedCustomer.id,
+        const response = await axios.post("http://127.0.0.1:5000/loan", {
+            customer_id: customerId,
             game_id: gameId,
             return_date: returnDate
         });
@@ -198,8 +238,8 @@ async function loanGame(gameId) {
         alert(response.data.message);
         getGames(); // Refresh games list
     } catch (error) {
-        console.error('Error loaning game:', error);
-        alert(error.response?.data?.error || 'Failed to loan game');
+        console.error("Error loaning game:", error);
+        alert("Failed to loan game.");
     }
 }
 
