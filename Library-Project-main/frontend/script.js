@@ -346,3 +346,4 @@ async function deleteGame(gameId) {
         alert('Failed to delete game');
     }
 }
+
