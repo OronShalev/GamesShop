@@ -115,6 +115,7 @@ async function deleteCustomer(customerId) {
         await axios.delete(`http://127.0.0.1:5000/customers/${customerId}`);
         alert('Customer deleted successfully!');
         getCustomers(); // Refresh the customer list
+        getGames();
     } catch (error) {
         console.error('Error deleting customer:', error);
         alert('Failed to delete customer');

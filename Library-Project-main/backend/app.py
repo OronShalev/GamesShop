@@ -126,9 +126,15 @@ def delete_game(game_id):
         if not game:
             return jsonify({'error': 'Game not found'}), 404
 
+        # First delete any associated loans
+        loans = Loan.query.filter_by(game_id=game_id).all()
+        for loan in loans:
+            db.session.delete(loan)
+
+        # Then delete the game
         db.session.delete(game)
         db.session.commit()
-        return jsonify({'message': 'Game deleted successfully'}), 200
+        return jsonify({'message': 'Game and associated loans deleted successfully'}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': 'Failed to delete game', 'message': str(e)}), 500
@@ -187,14 +193,23 @@ def get_clients():
 # Delete Customer
 @app.route('/customers/<int:customer_id>', methods=['DELETE'])
 def drop_customer(customer_id):
-    customer = Customer.query.get(customer_id)
-    if not customer:
-        return jsonify({"error": "Customer not found"}), 404
+    try:
+        customer = Customer.query.get(customer_id)
+        if not customer:
+            return jsonify({"error": "Customer not found"}), 404
 
-    db.session.delete(customer)
-    db.session.commit()
-    return jsonify({"message": "Customer deleted successfully!"}), 200
+        # First delete all loans associated with this customer
+        loans = Loan.query.filter_by(client_id=customer_id).all()
+        for loan in loans:
+            db.session.delete(loan)
 
+        # Then delete the customer
+        db.session.delete(customer)
+        db.session.commit()
+        return jsonify({"message": "Customer and associated loans deleted successfully!"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to delete customer', 'message': str(e)}), 500
 
 if __name__ == '__main__':
     app.config['SECRET_KEY'] = 'your_secret_key'  # Ensure a secret key is set
