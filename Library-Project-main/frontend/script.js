@@ -121,7 +121,7 @@ async function deleteCustomer(customerId) {
     }
 }
 
-// Function to get all games from the API
+// Existing getGames function with modifications
 async function getGames() {
     try {
         const token = localStorage.getItem('token');
@@ -136,6 +136,16 @@ async function getGames() {
             let loanButtonText = game.is_loaned ? "Loaned" : "Loan";
             let loanButtonDisabled = game.is_loaned ? "disabled" : "";
 
+            // New loan details rendering
+            let loanDetailsHTML = game.is_loaned && game.loan_details ? `
+                <div class="loan-details">
+                    <p>Loaned to: ${game.loan_details.customer_name}</p>
+                    <p>Phone: ${game.loan_details.customer_phone}</p>
+                    <p>Return Date: ${game.loan_details.return_date}</p>
+                    <button onclick="returnGame(${game.id})">Return Game</button>
+                </div>
+            ` : '';
+
             gamesList.innerHTML += `
                 <div class="game-card" id="game-${game.id}">
                     <h3>${game.name}</h3>
@@ -144,12 +154,25 @@ async function getGames() {
                     <button id="loan-btn-${game.id}" ${loanButtonDisabled} onclick="toggleLoanForm(${game.id})">${loanButtonText}</button>
                     <button onclick="deleteGame(${game.id})">Delete</button>
                     <div id="loan-form-${game.id}" class="loan-form hidden"></div>
+                    ${loanDetailsHTML}
                 </div>
             `;
         });
     } catch (error) {
         console.error('Error fetching games:', error);
         alert('Failed to load games');
+    }
+}
+
+// New function to return a game
+async function returnGame(gameId) {
+    try {
+        const response = await axios.delete(`http://127.0.0.1:5000/return_game/${gameId}`);
+        alert(response.data.message);
+        getGames(); // Refresh games list
+    } catch (error) {
+        console.error('Error returning game:', error);
+        alert(error.response?.data?.error || 'Failed to return game');
     }
 }
 

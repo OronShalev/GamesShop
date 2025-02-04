@@ -106,7 +106,7 @@ def get_games():
 @app.route('/return_game/<int:game_id>', methods=['DELETE'])
 def return_game(game_id):
     try:
-        loan = Loan.query.filter_by(game_id=game_id, return_date=None).first()
+        loan = Loan.query.filter_by(game_id=game_id).first()
         if not loan:
             return jsonify({'error': 'No active loan found for this game'}), 404
 
