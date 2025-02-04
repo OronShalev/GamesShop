@@ -40,7 +40,7 @@ def add_game():
 def search_customers():
     query = request.args.get('q', '')  # Get search term
     customers = Customer.query.filter(Customer.name.ilike(f"%{query}%")).order_by(Customer.name).all()
-    customers_list = [{"id": c.id, "name": c.name} for c in customers]
+    customers_list = [{"id": c.id, "name": c.name, "phone_number": c.phone_number} for c in customers]
     return jsonify({"customers": customers_list})
 
 
@@ -79,19 +79,45 @@ def get_games():
 
         games_list = []
         for game in games:
-            is_loaned = Loan.query.filter_by(game_id=game.id).first() is not None
+            loan = Loan.query.filter_by(game_id=game.id).first()
+            loan_details = None
+            if loan:
+                customer = Customer.query.get(loan.client_id)
+                loan_details = {
+                    "customer_name": customer.name,
+                    "customer_phone": customer.phone_number,
+                    "return_date": loan.return_date.strftime("%Y-%m-%d") if loan.return_date else "No due date"
+                }
+
             games_list.append({
                 'id': game.id,
                 'name': game.name,
                 'price': game.price,
                 'quantity': game.quantity,
-                'is_loaned': is_loaned
+                'is_loaned': loan is not None,
+                'loan_details': loan_details
             })
 
         return jsonify({'message': 'Games retrieved successfully', 'games': games_list}), 200
 
     except Exception as e:
         return jsonify({'error': 'Failed to retrieve games', 'message': str(e)}), 500
+
+@app.route('/return_game/<int:game_id>', methods=['DELETE'])
+def return_game(game_id):
+    try:
+        loan = Loan.query.filter_by(game_id=game_id, return_date=None).first()
+        if not loan:
+            return jsonify({'error': 'No active loan found for this game'}), 404
+
+        db.session.delete(loan)
+        db.session.commit()
+        return jsonify({'message': 'Game returned successfully'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to return game', 'message': str(e)}), 500
+
 
 @app.route('/games/<int:game_id>', methods=['DELETE'])
 def delete_game(game_id):

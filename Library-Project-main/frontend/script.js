@@ -169,7 +169,7 @@ async function toggleLoanForm(gameId) {
     const customers = await fetchCustomers();
 
     let customerOptions = customers.map(
-        customer => `<option value="${customer.id}">${customer.name} (${customer.phone})</option>`
+        customer => `<option value="${customer.id}">${customer.name} (${customer.phone_number})</option>`
     ).join("");
 
     loanFormContainer.innerHTML = `
