@@ -9,3 +9,6 @@ class Game(db.Model):
     price = db.Column(db.Float, nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
 
+    def __repr__(self):
+        return f"Game(name='{self.name}', price={self.price}, quantity={self.quantity})"
+
