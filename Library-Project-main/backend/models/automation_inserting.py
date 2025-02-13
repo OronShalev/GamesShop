@@ -7,7 +7,7 @@ from selenium.webdriver.support import expected_conditions as ec
 import time
 
 # Read the games from the Excel file
-df = pd.read_excel('games.xlsx')
+df = pd.read_excel('games2.xlsx')
 
 # Setup Selenium WebDriver
 driver = webdriver.Chrome()  # Make sure you have the ChromeDriver installed and in your PATH
